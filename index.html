@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Chat</title>
+    </head>
+    <body>
+        <h1>Welcome to chat!</h1>
+        <h2>Chat Log</h2>
+        <table id="log"></table>
+        <form id="form">
+            <label for="name">Name:</label><input type="text" name="name"><br>
+            <label for="message">Message:</label><input type="text" name="message"><br>
+            <input type="submit" value="submit">
+        </form>
+        <script>
+            var frm = document.getElementById('form');
+            
+            frm.addEventListener('submit', function(e){
+                e.preventDefault();
+                var name = document.querySelector('[name="name"]').value, message = document.querySelector('[name="message"]').value;
+                if(name.trim() && message.trim()) {
+                   ajax(JSON.stringify({
+                       name : name,
+                       message : message
+                   }));
+                }
+
+            });
+
+            function ajax (obj) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/send', true);
+                xhr.setRequestHeader("Content-type", "application/json");
+                xhr.onreadystatechange = function(res) {
+                    if(xhr.readyState === 4 && xhr.status !== 200) {
+                        console.log(xhr.responseText);
+                    } 
+                }
+                xhr.send(obj);
+            }
+
+            function chat_log (data) {
+                data = JSON.parse(data);
+                var log = document.getElementById('log'), html = '';
+                for(var i = 0; i < data.length; i++) {
+                    html += '<tr><td>'+data[i].Name+'</td><td>'+data[i].Message+'</td></tr>'
+                }
+                log.innerHTML = html;
+            }
+
+            (function gets () {
+                var obj = JSON.stringify({'ID' : 0});
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/recieve', true);
+                xhr.setRequestHeader("Content-type", "application/json");
+                xhr.onreadystatechange = function(res) {
+                    if(xhr.readyState === 4 && xhr.status === 200) {
+                        chat_log(xhr.responseText);
+                        setTimeout(gets, 1000);
+                    } else if (xhr.readyState === 4 && xhr.status !== 200) {
+                        setTimeout(gets, 1000);
+                    }
+                }
+                xhr.send(obj);
+            })()
+        </script>
+    </body>
+</html>
